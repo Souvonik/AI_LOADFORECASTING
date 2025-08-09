@@ -28,6 +28,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import AICopilot from "./AICopilot";
+import { DatePicker } from "./ui/date-picker";
 
 // Fix default marker icon issues in Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -45,13 +46,13 @@ L.Icon.Default.mergeOptions({
 interface WorldMapInterfaceProps {
   isVisible?: boolean;
   onClose?: () => void;
-  selectedDate: string;
   onPredictionResult: (data: any) => void;
 }
 
 const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
   isVisible = true,
   onClose = () => console.log("Close map interface"),
+  onPredictionResult,
 }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>("Global");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -61,8 +62,9 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
   const [activeView, setActiveView] = useState<string>("globe");
   const globeRef = useRef<HTMLDivElement>(null);
 
-  // New state for selected date (default value; later integrate with TimeControls)
-  const [selectedDate, setSelectedDate] = useState<string>("2025-04-15");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date("2025-04-15")
+  );
 
   const [statesGeoJson, setStatesGeoJson] = useState<any>(null);
   const [cities, setCities] = useState<any[]>([]);
@@ -83,20 +85,72 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
       .catch((error) => console.error("Error loading Indian Cities data:", error));
   }, []);
 
+  useEffect(() => {
+    const splineViewer = globeRef.current;
+
+    const handleClick = (e: any) => {
+      const { clientX, clientY } = e;
+      const lat = (clientY / window.innerHeight) * 180 - 90;
+      const lng = (clientX / window.innerWidth) * 360 - 180;
+      
+      // For now, we'll just switch to the map view
+      // In a real implementation, we would use raycasting to get the exact coordinates
+      setActiveView("map");
+    };
+
+    if (splineViewer) {
+      splineViewer.addEventListener("click", handleClick);
+    }
+
+    return () => {
+      if (splineViewer) {
+        splineViewer.removeEventListener("click", handleClick);
+      }
+    };
+  }, [globeRef]);
+
   // Modified: Now makes a backend call when a marker is clicked
-  const handleRegionSelect = (city: any) => {
+  const handleRegionSelect = async (city: any) => {
     setIsLoading(true);
     setSelectedRegion(city.city);
 
-    // Generate synthetic data
-    const syntheticData = {
-      demandLoad: Math.floor(Math.random() * 50) + 50, // 50-100
-      energyPrice: Math.random() * 0.1 + 0.1, // 0.10-0.20
-    };
+    if (!selectedDate) {
+      console.error("No date selected");
+      // Optionally, show a message to the user to select a date
+      setIsLoading(false);
+      return;
+    }
 
-    setSelectedCityData(syntheticData);
+    const formattedDate = selectedDate.toISOString().split("T")[0];
 
-    setTimeout(() => setIsLoading(false), 500);
+    try {
+      const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          district: city.city,
+          date: formattedDate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      onPredictionResult(data); // Pass prediction to parent
+      setSelectedCityData({
+        demandLoad: data.load,
+        energyPrice: data.price,
+      });
+    } catch (error) {
+      console.error("Error fetching prediction:", error);
+      // Handle error state in UI
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleZoomIn = () => {
@@ -164,9 +218,6 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
         {/* Header with controls */}
         <motion.div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center" variants={itemVariants}>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Back to Landing
-            </Button>
             <h1 className="text-xl font-bold">Energy Load Forecasting Map</h1>
             <select
               className="ml-4 p-2 border rounded-md bg-white dark:bg-gray-800"
@@ -181,6 +232,7 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <DatePicker date={selectedDate} setDate={setSelectedDate} />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -246,22 +298,10 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
               </TabsList>
 
               <TabsContent value="globe" className="h-full">
-                <div
+                <spline-viewer
                   ref={globeRef}
-                  className="w-full h-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center"
-                  style={{ transform: `scale(${zoomLevel})` }}
-                >
-                  {/* Replace with actual 3D globe visualization */}
-                  <div className="relative w-[500px] h-[500px] rounded-full bg-blue-200 dark:bg-blue-800 overflow-hidden">
-                    <div className="absolute top-[20%] left-[15%] w-[20%] h-[30%] bg-green-300 dark:bg-green-700 opacity-80"></div>
-                    <div className="absolute top-[25%] left-[40%] w-[25%] h-[20%] bg-green-300 dark:bg-green-700 opacity-80"></div>
-                    <div className="absolute top-[55%] left-[30%] w-[15%] h-[20%] bg-green-300 dark:bg-green-700 opacity-80"></div>
-                    <div className="absolute top-[60%] left-[70%] w-[15%] h-[15%] bg-green-300 dark:bg-green-700 opacity-80"></div>
-
-                    {/* Example: Displaying district markers on the 3D globe */}
-                    {/* City markers will be rendered on the flat map for better accuracy */}
-                  </div>
-                </div>
+                  url="https://prod.spline.design/OVF1bLnDB7kufR6q/scene.splinecode"
+                />
               </TabsContent>
 
               <TabsContent value="map" className="h-full">
@@ -307,7 +347,7 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
           </motion.div>
 
           {/* Data sidebar */}
-          <motion.div className="w-[350px] border-l border-gray-200 dark:border-gray-800" variants={itemVariants}>
+          <motion.div className="w-[500px] border-l border-gray-200 dark:border-gray-800" variants={itemVariants}>
             <DataSidebar
               regionName={selectedRegion}
               isLoading={isLoading}

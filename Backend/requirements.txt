@@ -1,0 +1,7 @@
+Flask
+pandas
+prophet
+flask-cors
+google-generativeai
+beautifulsoup4
+requests
