@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import LandingHero from "./LandingHero";
+import React, { useState, useEffect } from "react";
+import Landing from "./Landing";
 import WorldMapInterface from "./WorldMapInterface";
 
 const Home: React.FC = () => {
@@ -9,15 +9,18 @@ const Home: React.FC = () => {
     setShowMap(true);
   };
 
-  const handleBackToLanding = () => {
-    setShowMap(false);
+  const handlePredictionResult = (data: any) => {
+    console.log("Prediction data received in Home:", data);
   };
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {!showMap && <LandingHero onTryNowClick={handleTryNowClick} />}
+      {!showMap && <Landing onTryNowClick={handleTryNowClick} />}
       {showMap && (
-        <WorldMapInterface isVisible={true} onClose={handleBackToLanding} />
+        <WorldMapInterface
+          isVisible={true}
+          onPredictionResult={handlePredictionResult}
+        />
       )}
     </div>
   );

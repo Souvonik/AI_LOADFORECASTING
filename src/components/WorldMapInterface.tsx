@@ -11,6 +11,8 @@ import {
   Maximize,
   Minimize,
   Info,
+  PanelLeftClose,
+  PanelRightClose,
 } from "lucide-react";
 import {
   Tooltip,
@@ -29,6 +31,8 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import AICopilot from "./AICopilot";
 import { DatePicker } from "./ui/date-picker";
+import { Globe } from "./magicui/globe";
+import DecryptedText from "./DecryptedText";
 
 // Fix default marker icon issues in Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -60,7 +64,8 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<string>("globe");
-  const globeRef = useRef<HTMLDivElement>(null);
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date("2025-04-15")
@@ -85,34 +90,12 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
       .catch((error) => console.error("Error loading Indian Cities data:", error));
   }, []);
 
-  useEffect(() => {
-    const splineViewer = globeRef.current;
-
-    const handleClick = (e: any) => {
-      const { clientX, clientY } = e;
-      const lat = (clientY / window.innerHeight) * 180 - 90;
-      const lng = (clientX / window.innerWidth) * 360 - 180;
-      
-      // For now, we'll just switch to the map view
-      // In a real implementation, we would use raycasting to get the exact coordinates
-      setActiveView("map");
-    };
-
-    if (splineViewer) {
-      splineViewer.addEventListener("click", handleClick);
-    }
-
-    return () => {
-      if (splineViewer) {
-        splineViewer.removeEventListener("click", handleClick);
-      }
-    };
-  }, [globeRef]);
 
   // Modified: Now makes a backend call when a marker is clicked
   const handleRegionSelect = async (city: any) => {
     setIsLoading(true);
     setSelectedRegion(city.city);
+    setIsSidebarCollapsed(false);
 
     if (!selectedDate) {
       console.error("No date selected");
@@ -216,7 +199,11 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
     >
       <div className="h-full flex flex-col">
         {/* Header with controls */}
-        <motion.div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center" variants={itemVariants}>
+        {hasInteracted && (
+          <motion.div
+            className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center"
+            variants={itemVariants}
+          >
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold">Energy Load Forecasting Map</h1>
             <select
@@ -258,7 +245,6 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -284,29 +270,72 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+           <TooltipProvider>
+             <Tooltip>
+               <TooltipTrigger asChild>
+                 <Button
+                   variant="outline"
+                   size="icon"
+                   onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                 >
+                   {isSidebarCollapsed ? (
+                     <PanelLeftClose className="h-4 w-4" />
+                   ) : (
+                     <PanelRightClose className="h-4 w-4" />
+                   )}
+                 </Button>
+               </TooltipTrigger>
+               <TooltipContent>
+                 <p>
+                   {isSidebarCollapsed ? "Show sidebar" : "Collapse sidebar"}
+                 </p>
+               </TooltipContent>
+             </Tooltip>
+           </TooltipProvider>
           </div>
         </motion.div>
+       )}
 
         {/* Main content area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Map visualization */}
           <motion.div className="flex-1 relative" variants={itemVariants}>
             <Tabs value={activeView} onValueChange={setActiveView} className="h-full">
-              <TabsList className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-                <TabsTrigger value="globe">3D Globe</TabsTrigger>
-                <TabsTrigger value="map">Flat Map</TabsTrigger>
-              </TabsList>
 
               <TabsContent value="globe" className="h-full">
-                <spline-viewer
-                  ref={globeRef}
-                  url="https://prod.spline.design/OVF1bLnDB7kufR6q/scene.splinecode"
-                />
+                <div
+                  className="relative flex size-full items-center justify-center overflow-hidden rounded-lg border bg-background pb-40 pt-8 md:pb-60 cursor-pointer"
+                  onClick={() => {
+                    setActiveView("map");
+                    setHasInteracted(true);
+                  }}
+                >
+                  <Globe className="top-28" />
+                  <div className="pointer-events-none absolute inset-0 h-full bg-[radial-gradient(circle_at_50%_200%,rgba(0,0,0,0.2),rgba(255,255,255,0))]" />
+                  <div className="absolute bottom-20">
+                    <DecryptedText
+                      text="Click the globe to see the map"
+                      animateOn="hover"
+                      className="text-black font-medium"
+                      
+                    />
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="map" className="h-full">
                 <div className="w-full h-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
                   {/* Flat map visualization with GeoJSON layer */}
+                  <div className="absolute bottom-4 left-4 z-[1000]">
+                    <Button
+                      onClick={() => {
+                        setActiveView("globe");
+                        setHasInteracted(false);
+                      }}
+                    >
+                      Back to Globe
+                    </Button>
+                  </div>
                   <MapContainer center={[22.3511148, 78.6677428]} zoom={5} style={{ width: "100%", height: "100%" }}>
                     <TileLayer
                       attribution='&copy; OpenStreetMap contributors'
@@ -347,7 +376,15 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
           </motion.div>
 
           {/* Data sidebar */}
-          <motion.div className="w-[500px] border-l border-gray-200 dark:border-gray-800" variants={itemVariants}>
+          {hasInteracted && (
+           <motion.div
+             className={`border-l border-gray-200 dark:border-gray-800 transition-all duration-300 ${
+               isSidebarCollapsed ? "w-0" : "w-[500px]"
+             }`}
+             variants={itemVariants}
+             initial={{ width: isSidebarCollapsed ? 0 : 500 }}
+             animate={{ width: isSidebarCollapsed ? 0 : 500 }}
+           >
             <DataSidebar
               regionName={selectedRegion}
               isLoading={isLoading}
@@ -360,7 +397,8 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
               demandLoad={selectedCityData?.demandLoad}
               energyPrice={selectedCityData?.energyPrice}
             />
-          </motion.div>
+            </motion.div>
+          )}
         </div>
 
         
