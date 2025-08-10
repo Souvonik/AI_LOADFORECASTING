@@ -33,6 +33,8 @@ import AICopilot from "./AICopilot";
 import { DatePicker } from "./ui/date-picker";
 import { Globe } from "./magicui/globe";
 import DecryptedText from "./DecryptedText";
+import TextType from "./magicui/TextType";
+import RotatingText from "./magicui/rotating-text";
 
 // Fix default marker icon issues in Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -205,7 +207,7 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
             variants={itemVariants}
           >
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">Energy Load Forecasting Map</h1>
+            <h1 className="text-xl font-bold">YKO.AI</h1>
             <select
               className="ml-4 p-2 border rounded-md bg-white dark:bg-gray-800"
               value={selectedState}
@@ -220,56 +222,6 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
 
           <div className="flex items-center gap-2">
             <DatePicker date={selectedDate} setDate={setSelectedDate} />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={() => setActiveView(activeView === "globe" ? "map" : "globe")}>
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle view mode</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={handleZoomIn}>
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom in</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={handleZoomOut}>
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom out</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={toggleFullscreen}>
-                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
            <TooltipProvider>
              <Tooltip>
                <TooltipTrigger asChild>
@@ -304,22 +256,52 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
 
               <TabsContent value="globe" className="h-full">
                 <div
-                  className="relative flex size-full items-center justify-center overflow-hidden rounded-lg border bg-background pb-40 pt-8 md:pb-60 cursor-pointer"
-                  onClick={() => {
-                    setActiveView("map");
-                    setHasInteracted(true);
-                  }}
+                  className="relative flex size-full items-center justify-center overflow-hidden rounded-lg border bg-background pb-40 pt-8 md:pb-60"
                 >
-                  <Globe className="top-28" />
-                  <div className="pointer-events-none absolute inset-0 h-full bg-[radial-gradient(circle_at_50%_200%,rgba(0,0,0,0.2),rgba(255,255,255,0))]" />
-                  <div className="absolute bottom-20">
-                    <DecryptedText
-                      text="Click the globe to see the map"
-                      animateOn="hover"
-                      className="text-black font-medium"
-                      
+                  <div className="w-1/3 flex flex-col items-start justify-center text-left pl-10">
+                    <TextType
+                      text="YKO.AI"
+                      as="h1"
+                      className="text-5xl md:text-7xl font-extrabold text-black"
+                      typingSpeed={100}
+                      loop={false}
+                    />
+                    <TextType
+                      text="Turn sunlight into steady earnings with accurate solar revenue predictions. Stay informed with real-time power demand updates tailored to your location. Plan your energy future smarter with AI-powered insights."
+                      as="p"
+                      className="text-lg md:text-xl font-medium text-black mt-4"
+                      typingSpeed={40}
+                      initialDelay={1000}
+                      loop={false}
                     />
                   </div>
+                  <div
+                    className="w-1/3 h-full cursor-pointer flex items-center justify-center"
+                    onClick={() => {
+                      setActiveView("map");
+                      setHasInteracted(true);
+                    }}
+                  >
+                    <Globe className="top-28" />
+                    <div className="pointer-events-none absolute inset-0 h-full bg-[radial-gradient(circle_at_50%_200%,rgba(0,0,0,0.2),rgba(255,255,255,0))]" />
+                  </div>
+                  <div className="w-1/3 flex items-center justify-center text-black text-5xl font-bold">
+                    <div className="flex flex-row items-center">
+                      <span className="mr-4">Smart</span>
+                      <RotatingText
+                        texts={["Energy", "Planning", "Insights", "Future"]}
+                        splitBy="words"
+                        mainClassName="bg-black text-white p-2 rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
+                  <DecryptedText
+                    text="Click the globe to see the map"
+                    animateOn="hover"
+                    className="text-black dark:text-white font-medium"
+                  />
                 </div>
               </TabsContent>
 
@@ -392,8 +374,6 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
                 setIsLoading(true);
                 setTimeout(() => setIsLoading(false), 1000);
               }}
-              onExport={() => console.log("Exporting data for", selectedRegion)}
-              onFilterChange={(filter) => console.log("Filter changed:", filter)}
               demandLoad={selectedCityData?.demandLoad}
               energyPrice={selectedCityData?.energyPrice}
             />

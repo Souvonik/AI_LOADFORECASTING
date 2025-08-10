@@ -25,6 +25,7 @@ const Landing: React.FC<LandingProps> = ({ onTryNowClick }) => {
       <spline-viewer
         loading-anim-type="spinner-small-light"
         url="https://prod.spline.design/eTeo6rfhLvn6n1dv/scene.splinecode"
+        logo="false"
       ></spline-viewer>
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
         <InteractiveHoverButton onClick={onTryNowClick}>

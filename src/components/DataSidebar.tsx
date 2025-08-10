@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Button } from "./ui/button";
-import { Download, Filter, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import MetricsPanel from "./MetricsPanel";
 import DataVisualization from "./DataVisualization";
 
@@ -10,8 +10,6 @@ interface DataSidebarProps {
   regionName?: string;
   isLoading?: boolean;
   onRefresh?: () => void;
-  onExport?: () => void;
-  onFilterChange?: (filter: string) => void;
   demandLoad?: number;
   energyPrice?: number;
 }
@@ -20,8 +18,6 @@ const DataSidebar: React.FC<DataSidebarProps> = ({
   regionName = "Global",
   isLoading = false,
   onRefresh = () => console.log("Refresh data"),
-  onExport = () => console.log("Export data"),
-  onFilterChange = (filter) => console.log(`Filter changed to: ${filter}`),
   demandLoad,
   energyPrice,
 }) => {
@@ -37,12 +33,6 @@ const DataSidebar: React.FC<DataSidebarProps> = ({
             disabled={isLoading}
           >
             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-          </Button>
-          <Button variant="outline" size="sm" onClick={onExport}>
-            <Download size={16} />
-          </Button>
-          <Button variant="outline" size="sm">
-            <Filter size={16} />
           </Button>
         </div>
       </div>
