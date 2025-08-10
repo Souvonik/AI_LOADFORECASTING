@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from "react";
 import Landing from "./Landing";
 import WorldMapInterface from "./WorldMapInterface";
+import { csv } from "d3-fetch";
 
 const Home: React.FC = () => {
   const [showMap, setShowMap] = useState<boolean>(false);
+  const [forecastData, setForecastData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await csv("/combined_forecasts.csv");
+        setForecastData(data as any[]);
+      } catch (error) {
+        console.error("Error fetching forecast data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleTryNowClick = () => {
     setShowMap(true);
@@ -20,6 +35,7 @@ const Home: React.FC = () => {
         <WorldMapInterface
           isVisible={true}
           onPredictionResult={handlePredictionResult}
+          forecastData={forecastData}
         />
       )}
     </div>

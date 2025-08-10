@@ -28,75 +28,31 @@ import {
 
 interface DataVisualizationProps {
   locationName?: string;
-  historicalData?: Array<{
-    date: string;
-    demand: number;
-  }>;
-  forecastData?: Array<{
-    date: string;
-    demand: number;
-  }>;
+  forecastData?: any[];
 }
-
-const mockHistoricalData = [
-  { date: "January", demand: 120 },
-  { date: "February", demand: 130 },
-  { date: "March", demand: 145 },
-  { date: "April", demand: 160 },
-  { date: "May", demand: 170 },
-  { date: "June", demand: 190 },
-  { date: "July", demand: 210 },
-  { date: "August", demand: 205 },
-  { date: "September", demand: 185 },
-  { date: "October", demand: 165 },
-  { date: "November", demand: 150 },
-  { date: "December", demand: 140 },
-];
-
-const mockForecastData = [
-  { date: "January", demand: 125 },
-  { date: "February", demand: 135 },
-  { date: "March", demand: 150 },
-  { date: "April", demand: 165 },
-  { date: "May", demand: 175 },
-  { date: "June", demand: 195 },
-  { date: "July", demand: 215 },
-  { date: "August", demand: 210 },
-  { date: "September", demand: 190 },
-  { date: "October", demand: 170 },
-  { date: "November", demand: 155 },
-  { date: "December", demand: 145 },
-];
 
 const DataVisualization: React.FC<DataVisualizationProps> = ({
   locationName = "Global",
-  historicalData = mockHistoricalData,
-  forecastData = mockForecastData,
+  forecastData = [],
 }) => {
   const [chartType, setChartType] = useState("line");
-  const [dataType, setDataType] = useState("historical");
 
-  const currentData = dataType === "historical" ? historicalData : forecastData;
+  const chartData = forecastData?.map((d) => ({
+    date: new Date(d.ds).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    }),
+    demand: parseFloat(d.load_yhat_kwh) / 1000,
+  }));
 
   return (
     <div className="w-full h-full bg-white dark:bg-gray-950 rounded-lg shadow-sm overflow-hidden">
       <Card className="border-0 shadow-none h-full">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium">
-            {locationName} Monthly Load Demand -{" "}
-            {dataType === "historical" ? "Historical" : "Forecast"}
+            {locationName} Monthly Load Demand Forecast
           </CardTitle>
-          <div className="flex justify-between items-center mt-2">
-            <Tabs
-              defaultValue="historical"
-              className="w-[200px]"
-              onValueChange={setDataType}
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="historical">Historical</TabsTrigger>
-                <TabsTrigger value="forecast">Forecast</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <div className="flex justify-end items-center mt-2">
             <Tabs
               defaultValue="line"
               className="w-[250px]"
@@ -115,7 +71,7 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
             {chartType === "line" && (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={currentData}
+                  data={chartData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -137,7 +93,7 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
             {chartType === "bar" && (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={currentData}
+                  data={chartData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -152,7 +108,7 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
             {chartType === "area" && (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={currentData}
+                  data={chartData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />

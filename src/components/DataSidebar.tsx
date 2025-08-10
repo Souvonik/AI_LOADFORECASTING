@@ -12,6 +12,8 @@ interface DataSidebarProps {
   onRefresh?: () => void;
   demandLoad?: number;
   energyPrice?: number;
+  forecastData?: any[];
+  selectedDate?: Date;
 }
 
 const DataSidebar: React.FC<DataSidebarProps> = ({
@@ -20,11 +22,14 @@ const DataSidebar: React.FC<DataSidebarProps> = ({
   onRefresh = () => console.log("Refresh data"),
   demandLoad,
   energyPrice,
+  forecastData,
+  selectedDate,
 }) => {
+
   return (
     <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{regionName} Data</h2>
+        <h2 className="text-2xl font-bold">{regionName} Data</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -39,11 +44,11 @@ const DataSidebar: React.FC<DataSidebarProps> = ({
 
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {/* Metrics Panel */}
-        <div className="h-[250px]">
+        <div className="h-[350px]">
           <MetricsPanel
             regionName={regionName}
-            demandLoad={demandLoad}
-            energyPrice={energyPrice}
+            forecastData={forecastData}
+            selectedDate={selectedDate}
           />
         </div>
 
@@ -55,7 +60,12 @@ const DataSidebar: React.FC<DataSidebarProps> = ({
           </TabsList>
           <TabsContent value="charts" className="mt-2">
             <div className="h-[450px]">
-              <DataVisualization locationName={regionName} />
+              <DataVisualization
+                locationName={regionName}
+                forecastData={forecastData?.filter(
+                  (d) => d.city === regionName
+                )}
+              />
             </div>
           </TabsContent>
           <TabsContent value="details" className="mt-2">

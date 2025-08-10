@@ -30,7 +30,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import AICopilot from "./AICopilot";
-import { DatePicker } from "./ui/date-picker";
+import { Slider } from "./ui/slider";
 import { Globe } from "./magicui/globe";
 import DecryptedText from "./DecryptedText";
 import TextType from "./magicui/TextType";
@@ -53,12 +53,14 @@ interface WorldMapInterfaceProps {
   isVisible?: boolean;
   onClose?: () => void;
   onPredictionResult: (data: any) => void;
+  forecastData: any[];
 }
 
 const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
   isVisible = true,
   onClose = () => console.log("Close map interface"),
   onPredictionResult,
+  forecastData,
 }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>("Global");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -69,9 +71,8 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
   const [hasInteracted, setHasInteracted] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date("2025-04-15")
-  );
+  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [selectedMonth, setSelectedMonth] = useState<number>(1);
 
   const [statesGeoJson, setStatesGeoJson] = useState<any>(null);
   const [cities, setCities] = useState<any[]>([]);
@@ -99,14 +100,10 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
     setSelectedRegion(city.city);
     setIsSidebarCollapsed(false);
 
-    if (!selectedDate) {
-      console.error("No date selected");
-      // Optionally, show a message to the user to select a date
-      setIsLoading(false);
-      return;
-    }
-
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+    const formattedDate = `${selectedYear}-${String(selectedMonth).padStart(
+      2,
+      "0"
+    )}-01`;
 
     try {
       const response = await fetch("http://127.0.0.1:5000/predict", {
@@ -221,7 +218,36 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <DatePicker date={selectedDate} setDate={setSelectedDate} />
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col">
+                <label htmlFor="year-slider" className="text-sm font-medium">
+                  Year: {selectedYear}
+                </label>
+                <Slider
+                  id="year-slider"
+                  min={2025}
+                  max={2029}
+                  step={1}
+                  value={[selectedYear]}
+                  onValueChange={(value) => setSelectedYear(value[0])}
+                  className="w-[150px]"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="month-slider" className="text-sm font-medium">
+                  Month: {selectedMonth}
+                </label>
+                <Slider
+                  id="month-slider"
+                  min={1}
+                  max={12}
+                  step={1}
+                  value={[selectedMonth]}
+                  onValueChange={(value) => setSelectedMonth(value[0])}
+                  className="w-[150px]"
+                />
+              </div>
+            </div>
            <TooltipProvider>
              <Tooltip>
                <TooltipTrigger asChild>
@@ -376,6 +402,10 @@ const WorldMapInterface: React.FC<WorldMapInterfaceProps> = ({
               }}
               demandLoad={selectedCityData?.demandLoad}
               energyPrice={selectedCityData?.energyPrice}
+              forecastData={forecastData}
+              selectedDate={
+                new Date(`${selectedYear}-${selectedMonth}-01`)
+              }
             />
             </motion.div>
           )}

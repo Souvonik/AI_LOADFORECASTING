@@ -17,15 +17,29 @@ import RenewableEnergy from "./RenewableEnergy";
 
 interface MetricsPanelProps {
   regionName?: string;
-  demandLoad?: number;
-  energyPrice?: number;
+  forecastData?: any[];
+  selectedDate?: Date;
 }
 
 const MetricsPanel = ({
-  regionName = "Global",
-  demandLoad = 78,
-  energyPrice = 0.14,
+  regionName,
+  forecastData,
+  selectedDate,
 }: MetricsPanelProps) => {
+  const latestData = forecastData
+    ?.filter(
+      (d) =>
+        d.city === regionName &&
+        new Date(d.ds).toDateString() === selectedDate?.toDateString()
+    )
+    .slice(-1)[0];
+
+  const demandLoad = latestData
+    ? parseFloat(latestData.load_yhat_kwh) / 1000
+    : 0;
+  const energyPrice = latestData
+    ? parseFloat(latestData.price_yhat_inr_per_kwh)
+    : 0;
   return (
     <Card className="w-full h-full bg-white shadow-md dark:bg-gray-800 overflow-auto">
       <CardHeader className="pb-2">
@@ -56,9 +70,14 @@ const MetricsPanel = ({
               <Zap size={16} className="text-amber-500" />
               <span className="text-sm font-medium">Load Demand</span>
             </div>
-            <span className="text-sm font-bold">{demandLoad}%</span>
+            <span className="text-sm font-bold">
+              {demandLoad ? `${demandLoad.toFixed(2)} kWh` : "N/A"}
+            </span>
           </div>
-          <Progress value={demandLoad} className="h-2" />
+          <Progress
+            value={demandLoad ? (demandLoad / 20) * 100 : 0}
+            className="h-2"
+          />
           <p className="text-xs text-gray-500">
             Current energy consumption relative to capacity
           </p>
@@ -73,11 +92,11 @@ const MetricsPanel = ({
               <span className="text-sm font-medium">Energy Price</span>
             </div>
             <span className="text-sm font-bold">
-              ${energyPrice.toFixed(2)}/kWh
+              {energyPrice ? `₹${energyPrice.toFixed(2)}/kWh` : "N/A"}
             </span>
           </div>
           <Progress
-            value={Math.min((energyPrice / 0.3) * 100, 100)}
+            value={energyPrice ? (energyPrice / 10) * 100 : 0}
             className="h-2 [&>div]:bg-blue-500"
           />
           <p className="text-xs text-gray-500">
@@ -85,7 +104,11 @@ const MetricsPanel = ({
           </p>
         </div>
 
-        <RenewableEnergy energyPrice={energyPrice} />
+        <RenewableEnergy
+          energyPrice={energyPrice}
+          regionName={regionName}
+          selectedDate={selectedDate}
+        />
 
         <div className="pt-2 text-xs text-gray-400 italic">
           Last updated: {new Date().toLocaleTimeString()}
