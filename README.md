@@ -14,10 +14,13 @@
   Calculates daily cost savings by comparing solar generation with load demand and local electricity prices.
 
 - **Interactive Map Interface**  
-  Easily select cities on a flat map focused on West Bengal for comparative analysis.
+  Easily select cities on a flat map focused on India for comparative analysis.
 
 - **Dynamic Data Visualization**  
   Presents charts and metrics showing load demand, solar generation, price trends, and estimated savings.
+  
+- **AI COPILOT**
+  Answers any query you have regarding the metrics
 
 ---
 
