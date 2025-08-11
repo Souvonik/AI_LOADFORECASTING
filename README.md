@@ -20,6 +20,7 @@
   Presents charts and metrics showing load demand, solar generation, price trends, and estimated savings.
   
 - **AI COPILOT**
+
   Answers any query you have regarding the metrics
 
 ---
