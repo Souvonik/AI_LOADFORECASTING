@@ -5,6 +5,11 @@
 
 ---
 
+
+https://github.com/user-attachments/assets/cbe01046-4193-45a8-8109-8b1a0fa131e6
+
+
+
 ## Features
 
 - **Solar Generation Estimates**  
